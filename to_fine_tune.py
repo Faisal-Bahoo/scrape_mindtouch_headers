@@ -4,24 +4,6 @@ def fine_tune_data(json_file):
     prompts_and_completions = []
     for obj in json_file:
         for page_id in obj:
-            # ########################################## #
-            #  {prompt: none, completion: page_content}  #
-            # ########################################## #
-            # if obj[page_id]["page_content"] != "":
-            #     x = {}
-            #     x["prompt"] = ""
-            #     x["completion"] = obj[page_id]["page_content"]
-            #     prompts_and_completions.append(x)
-
-            # ################################################ #
-            #  {prompt: page_title, completion: page_content}  #
-            # ################################################ #
-            # if obj[page_id]["page_content"] != "":
-            #     x = {}
-            #     x["prompt"] = obj[page_id]["page_title"]
-            #     x["completion"] = obj[page_id]["page_content"]
-            #     prompts_and_completions.append(x)
-
             # ################################################ #
             #  {prompt: header tags, completion: text under }  #
             # ################################################ #
