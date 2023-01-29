@@ -56,7 +56,9 @@ def prompts_version2(page_title,soup):
     myPrompt = page_title
     myCompletion = ""
     a = {}
+    saved = ""
     while curr:
+        # print(curr)
         next_header = curr.find_next(re.compile("^h[1-6]"))
         if next_header == None: 
             myPrompt, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header, "")
@@ -65,20 +67,36 @@ def prompts_version2(page_title,soup):
         else: 
             next_header_size = int(str(next_header)[-2:-1])
 
-        if curr_header_size < next_header_size:
+        if previous_header == None:
+            # print(curr_header_size,next_header_size)
+            if curr_header_size == next_header_size:
+                myPrompt, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header, "")
+                a[myPrompt] = myCompletion.strip()
+                curr = next_header            
+
+        if  previous_header != None and curr_header_size < next_header_size:
             myPrompt, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header, "")
             a[myPrompt] = myCompletion.strip()
             curr = next_header
 
-        if curr_header_size == next_header_size:
+        elif previous_header != None and curr_header_size == next_header_size:
             myPrompt, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header, "")
             a[myPrompt] = myCompletion.strip()
+            saved = myPrompt
             myPrompt = page_title
             myCompletion = ""
             curr = next_header
 
-        if curr_header_size > next_header_size:
-            myPrompt = page_title + " - " + next_header.text
+
+        elif  previous_header != None and curr_header_size > next_header_size:
+            # myPrompt = page_title + " - " + next_header.text
+            myPrompt, myCompletion = prompt_completion_helper(saved, curr, next_header, previous_header, "")
+            a[myPrompt] = myCompletion.strip()
+            myPrompt = page_title
+            myCompletion = ""
+            curr = next_header
+            curr_header_size = next_header_size
+
         
         previous_header = curr
 
@@ -188,7 +206,7 @@ def getTrueSubpages(pid):
 
 # testing
 tt = '''
-<div class="mt-page-summary"><div class="mt-page-overview"></div></div> <a class="new" href="https://faisal-bahoo-t.mindtouch.us/Template:Custom/List_Subpages_If_Exists" rel="internal">List Subpages If Exists</a> <p>Introductory remarks and summary of the article below. Optionally this could&nbsp;be a page summary, depending on how clients are formatting things.</p> <p>Our company is at the forefront of the Artificial Intelligence testing industry. We strive to offer the highest quality and most accurate testing results. Our cutting-edge AI testing technology is revolutionizing the AI testing industry and providing our customers with unprecedented accuracy and performance. With our innovative and visionary approach, we are able to stay ahead of the curve and deliver the best possible results to our customers.</p> <p>We are proud to be a market leader in the AI testing industry, providing our customers with the most accurate and cutting-edge testing solutions. Our visionary approach ensures that we remain ahead of the curve and continue to provide the best possible results to our clients.</p> <div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_1"><span id="Luminary_Vision"></span><h2 class="editable">Luminary Vision</h2> <p>Some information pertaining to this Luminary Vision. This is mission critical to delivering value to our customers! Below is&nbsp;a 2-point plan on how we'll rapidly execute on this vision.</p> <div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_2"><span id="Transformation"></span><h3 class="editable">Transformation</h3> <p>Transformation involves an 2-pronged approach: Extraction, and Transformation.</p> <div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_3"><span id="Extract"></span><h4 class="editable">Extract</h4> <p>Customers need to give us the data. It's going to suck, so next we need to...</p> <p>Here's a bullet list of the various ways to supply terrible data, just to drive home how easy it is to deliver garbage:</p> <ul> <li>CSV data that contains commas in cell contents</li> <li>CSV data with a separator other than commas, and no notice of the new separator value</li> <li>Supplying an XLSX file when we requested a CSV</li> <li>Sending a zip file of 1000's of txt files</li> </ul> </div><div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_4"><span id="Transform"></span><h4 class="editable">Transform</h4> <p>Technical mumbo jumbo...</p> <pre class="brush: python; collapse: false; first-line: 1; gutter: true; ruler: false; toolbar: true; wrap-lines: true; "> def CodeToBeIgnored(): cheese = &quot;String_Cheese&quot; cheeseTokens = cheese.split('_') # return list of cheese tokens </pre> </div></div><div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_5"><span id="Deliver"></span><h3 class="editable">Deliver</h3> <p>At our company, we are proud to offer rapid value delivery with our cutting-edge AI testing technology. We strive to stay ahead of the curve by providing our customers with the most accurate and efficient results. Our innovative and visionary approach ensures that our customers can stay ahead of the competition and get the highest quality results in the shortest amount of time. Our AI testing solutions are revolutionizing the industry and providing our customers with unprecedented accuracy and performance.</p> </div></div><div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_6"><span id="Stagnant_Vision"></span><h2 class="editable">Stagnant Vision</h2> <p>Alternate vision for the company. Just included to make Section 1 the obvious choice, but to allow decision makers to feel like the contributed to the project. Below is a streamlined 1-part plan on how to execute this vision.</p> <div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_7"><span id="Ignore_Customers"></span><h3 class="editable">Ignore Customers</h3> <p>Our AI testing technology is designed to provide our customers with the most accurate and efficient results without sacrificing quality. Our cutting-edge technology allows us to deliver rapid value without having to wait for customer feedback. By leveraging the latest AI technology, we are able to provide our customers with the highest quality results in the shortest amount of time. Our innovative and visionary approach ensures that our customers get the best results without having to wait for customer feedback. With our AI testing technology, our customers can stay ahead of the competition and get the highest quality results without having to wait for customer feedback.</p> </div></div>
+<div class="mt-page-summary"><div class="mt-page-overview"></div></div> <div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_1"><span id=""></span><h3 class="editable">&nbsp;</h3> </div><div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_2"><span id="_2"></span><h2 class="editable">&nbsp;</h2> <div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_3"><span id="Details"></span><h3 class="editable">Details</h3> <p>Offer the details a user needs to know about the definition, parameters, and so on. Tables are extremely useful for looking up information and organizing the details that readers want to know.</p> </div><div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_4"><span id="Definition"></span><h3 class="editable">Definition</h3> <pre> void print(String message)</pre> </div><div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_5"><span id="Parameters"></span><h3 class="editable">Parameters</h3> <dl> <dt>message</dt> <dd>Type: String<br /> Message to print.</dd> </dl> </div><div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_6"><span id="Response"></span><h3 class="editable">Response</h3> <p>Upon successful invocation, this feature returns ...</p> </div><div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_7"><span id="Exceptions"></span><h3 class="editable">Exceptions</h3> <table border="1" cellpadding="1" cellspacing="1" class="table" style="table-layout: fixed; width: 100%;"> <thead> <tr> <th scope="col">Exception</th> <th scope="col">Condition</th> </tr> </thead> <tbody> <tr> <td>ArgumentNullException</td> <td>message is null.</td> </tr> <tr> <td>&nbsp;</td> <td>&nbsp;</td> </tr> </tbody> </table> </div><div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_8"><span id="Remarks"></span><h3 class="editable">Remarks</h3> <p>Additional points to consider are ...</p> </div></div><div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_9"><span id="Examples"></span><h2 class="editable">Examples</h2> <div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_10"><span id="Example_1:"></span><h3 class="editable">Example 1:</h3> <p>First example shows ...</p> </div><div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_11"><span id="Example_2:"></span><h3 class="editable">Example 2:</h3> <p>Second example shows ...</p> </div></div><div mt-section-origin="Testing/guide_test/why_isnt_this_-_showing" class="mt-section" id="section_12"><span id="Considerations"></span><h2 class="editable">Considerations</h2> <p>Give some considerations such as system requirements or &quot;gotchas&quot; for this setting or control or programming syntax.</p> </div>
 '''
 
 soup = BeautifulSoup(tt, "html.parser")
