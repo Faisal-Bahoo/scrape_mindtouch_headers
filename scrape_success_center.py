@@ -69,7 +69,6 @@ def prompts_version2(page_title,soup):
           
         if not previous_header:
             saved = myPrompt
-            
 
         if  previous_header != None and curr_header_size < next_header_size:
             myPrompt, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header)
@@ -84,7 +83,6 @@ def prompts_version2(page_title,soup):
             myCompletion = ""
             curr = next_header
 
-
         elif  previous_header != None and curr_header_size > next_header_size:
             # myPrompt = page_title + " - " + next_header.text
             myPrompt, myCompletion = prompt_completion_helper(saved, curr, next_header, previous_header)
@@ -93,7 +91,6 @@ def prompts_version2(page_title,soup):
             myCompletion = ""
             curr = next_header
             curr_header_size = next_header_size
-
         
         previous_header = curr
 
@@ -106,17 +103,23 @@ def prompts_version1(page_title,soup):
     myCompletion = ""
     myCompletionFull = ""
     a = {}
+    saved = ""
     while curr:
+        print(curr)
         next_header = curr.find_next(re.compile("^h[1-6]"))
         if next_header == None: 
-            temp, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header, "")
-            a[temp] = myCompletionFull.strip() + myCompletion
+            myPrompt, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header)
+            a[myPrompt] = myCompletionFull.strip() + myCompletion
             return a
         else: 
             next_header_size = int(str(next_header)[-2:-1])
 
-        if largest_header_size < next_header_size:
-            temp, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header, "")
+        if not previous_header:
+            saved = myPrompt
+    
+            
+        if previous_header != None and largest_header_size < next_header_size:
+            temp, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header)
             if myPrompt == page_title:
                 myPrompt = temp
             myCompletionFull +=  myCompletion.strip() + " " + next_header.text + " "
@@ -124,20 +127,22 @@ def prompts_version1(page_title,soup):
             
             curr = next_header
 
-        elif largest_header_size == next_header_size:
-            temp, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header, "")
-            print(temp, largest_header_size, next_header_size)
+        elif previous_header != None and largest_header_size == next_header_size:
+            temp, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header)
             myCompletionFull += myCompletion
-            if not previous_header:
-                a[temp] = myCompletionFull.strip()
-            else:
-                a[myPrompt] = myCompletionFull.strip()
+            if myPrompt == page_title: myPrompt += " - " + curr.text
+            a[myPrompt] = myCompletionFull.strip()
             myPrompt = page_title
             myCompletionFull = ""
             curr = next_header
 
-        elif largest_header_size > next_header_size:
+        elif previous_header != None and largest_header_size > next_header_size:
+            myPrompt, myCompletion = prompt_completion_helper(saved, curr, next_header, previous_header)
+            a[myPrompt] = myCompletion.strip()
+            myPrompt = page_title
+            myCompletion = ""
             curr = next_header
+            largest_header_size = next_header_size
         
         previous_header = curr
 
@@ -203,11 +208,11 @@ def getTrueSubpages(pid):
 
 # testing
 tt = '''
-<div class="mt-page-summary"><div class="mt-page-overview"></div></div> <a class="new" href="https://faisal-bahoo-t.mindtouch.us/Template:Custom/List_Subpages_If_Exists" rel="internal">List Subpages If Exists</a> <p>Introductory remarks and summary of the article below. Optionally this could&nbsp;be a page summary, depending on how clients are formatting things.</p> <p>Our company is at the forefront of the Artificial Intelligence testing industry. We strive to offer the highest quality and most accurate testing results. Our cutting-edge AI testing technology is revolutionizing the AI testing industry and providing our customers with unprecedented accuracy and performance. With our innovative and visionary approach, we are able to stay ahead of the curve and deliver the best possible results to our customers.</p> <p>We are proud to be a market leader in the AI testing industry, providing our customers with the most accurate and cutting-edge testing solutions. Our visionary approach ensures that we remain ahead of the curve and continue to provide the best possible results to our clients.</p> <div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_1"><span id="Luminary_Vision"></span><h1 class="editable">Luminary Vision</h1> <p>Some information pertaining to this Luminary Vision. This is mission critical to delivering value to our customers! Below is&nbsp;a 2-point plan on how we'll rapidly execute on this vision.</p> <div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_2"><span id="Transformation"></span><h3 class="editable">Transformation</h3> <p>Transformation involves an 2-pronged approach: Extraction, and Transformation.</p> <div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_3"><span id="Extract"></span><h4 class="editable">Extract</h4> <p>Customers need to give us the data. It's going to suck, so next we need to...</p> <p>Here's a bullet list of the various ways to supply terrible data, just to drive home how easy it is to deliver garbage:</p> <ul> <li>CSV data that contains commas in cell contents</li> <li>CSV data with a separator other than commas, and no notice of the new separator value</li> <li>Supplying an XLSX file when we requested a CSV</li> <li>Sending a zip file of 1000's of txt files</li> </ul> </div><div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_4"><span id="Transform"></span><h4 class="editable">Transform</h4> <p>Technical mumbo jumbo...</p> <pre class="brush: python; collapse: false; first-line: 1; gutter: true; ruler: false; toolbar: true; wrap-lines: true; "> def CodeToBeIgnored(): cheese = &quot;String_Cheese&quot; cheeseTokens = cheese.split('_') # return list of cheese tokens </pre> </div></div><div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_5"><span id="Deliver"></span><h3 class="editable">Deliver</h3> <p>At our company, we are proud to offer rapid value delivery with our cutting-edge AI testing technology. We strive to stay ahead of the curve by providing our customers with the most accurate and efficient results. Our innovative and visionary approach ensures that our customers can stay ahead of the competition and get the highest quality results in the shortest amount of time. Our AI testing solutions are revolutionizing the industry and providing our customers with unprecedented accuracy and performance.</p> </div></div><div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_6"><span id="Stagnant_Vision"></span><h2 class="editable">Stagnant Vision</h2> <p>Alternate vision for the company. Just included to make Section 1 the obvious choice, but to allow decision makers to feel like the contributed to the project. Below is a streamlined 1-part plan on how to execute this vision.</p> <div mt-section-origin="Testing/category_test_for_wiki/another_guide_here/article_stuff_test" class="mt-section" id="section_7"><span id="Ignore_Customers"></span><h3 class="editable">Ignore Customers</h3> <p>Our AI testing technology is designed to provide our customers with the most accurate and efficient results without sacrificing quality. Our cutting-edge technology allows us to deliver rapid value without having to wait for customer feedback. By leveraging the latest AI technology, we are able to provide our customers with the highest quality results in the shortest amount of time. Our innovative and visionary approach ensures that our customers get the best results without having to wait for customer feedback. With our AI testing technology, our customers can stay ahead of the competition and get the highest quality results without having to wait for customer feedback.</p> </div></div>
+<div class="mt-page-summary"><div class="mt-page-overview">Get notified of changes to or comments on any subscribed Live or Draft pages.</div></div> <p>Any <a title="Pro member roles and permissions" href="https://success.mindtouch.com/Admin/Users_and_Groups/User_Management/Pro_Member_Roles_and_Permissions" rel="internal">Pro Member</a>&nbsp;with at least Viewer permissions on the page can subscribe to a&nbsp;Category, Guide, or individual&nbsp;page to receive&nbsp;a notification email&nbsp;of any changes.</p> <div class="mt-notes-container style-wrap" title="Note"> <p>Combine subscription notifications with functionality via the <a title="Manage page revisions" href="https://success.mindtouch.com/Manage/Author/Process/Revision_History" rel="internal">page revision history</a> to stay informed on any article changes you need to know about.</p> </div> <div mt-section-origin="Manage/Content_Maintenance/Subscriptions_and_Notifications/Subscribe_to_pages" class="mt-section" id="section_1"><span id="How_to_subscribe_to_pages"></span><h5 class="editable">How to subscribe to pages</h5> <ol> <li>Navigate to the page you want to subscribe to.</li> <li>Click the <strong>Page Notifications </strong>(star) icon in the upper right-hand corner of the page and select the appropriate radio button to set your subscription.<br /> <img alt="Page notification options include: 1) Subscribe to the current page, including drafts, 2) Subscribe to the current page and all sub-pages, 3) Turn OFF subscription notifications for the page, excluding drafts, and 4) Manage my subscriptions" class="internal default" loading="lazy" src="https://success.mindtouch.com/@api/deki/files/15607/Page_notification_options.png?revision=1" /></li> </ol> <p>If you are on a Category or&nbsp; Guide&nbsp;page and want to receive notifications on all content in that Category or Guide, select the option for&nbsp;<strong>This page and all sub-pages</strong>. To subscribe to all content on your site, navigate to each top-level Category or Guide from your homepage and subscribe to all sub-pages.</p> <div class="mt-style-conditional style-wrap" title="Conditional content &lt;strong&gt;(Pro member)&lt;/strong&gt;"> <p>On Success, subscribing to pages looks a little different. Click the word <strong>Page Notifications</strong> next to the last updated information beneath the page title.</p> </div> </div><div mt-section-origin="Manage/Content_Maintenance/Subscriptions_and_Notifications/Subscribe_to_pages" class="mt-section" id="section_2"><span id="Manage_subscriptions"></span><h2 class="editable">Manage subscriptions</h2> <p>To review the content you subscribed to and make changes to your subscriptions, the platform enables you to easily&nbsp;<a title="Change your page subscriptions" href="https://success.mindtouch.com/Manage/Content_Maintenance/Subscriptions_and_Notifications/Change_your_page_subscriptions" rel="internal">change your subscriptions</a>. To set notifications or to turn off notifications on drafts, read our <a title="Subscribe to drafts" href="https://success.mindtouch.com/Manage/Content_Maintenance/Subscriptions_and_Notifications/Subscribe_to_drafts" rel="internal">article on draft subscriptions</a></p> </div><div mt-section-origin="Manage/Content_Maintenance/Subscriptions_and_Notifications/Subscribe_to_pages" class="mt-section" id="section_3"><span id="Notification_email"></span><h2 class="editable">Notification email</h2> <ul> <li>Page Title and Site Name in the email subject</li> <li>Link to page</li> <li>Date, time, and username for the change</li> <li>Details about the change, including any <a title="Edit Summary" href="https://success.mindtouch.com/Manage/Author/Process/Edit_Summary" rel="internal">Edit Summary</a> comments and highlighted content changes</li> <li>Links to <strong>View page</strong>, <strong>Edit page</strong>, <strong>View complete diff,</strong> and <strong>View page history</strong>.</li> <li>Link to <strong>Manage your page subscription notifications</strong>.</li> </ul> </div>
 '''
 
 soup = BeautifulSoup(tt, "html.parser")
-training_data = prompts_version2("page_title", soup)
+training_data = prompts_version1("page_title", soup)
 
 
 with open("tests.json", "w", encoding="utf8") as file:
