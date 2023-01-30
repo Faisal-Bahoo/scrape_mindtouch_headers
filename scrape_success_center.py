@@ -32,7 +32,11 @@ def generate_prompts_file():
                     for dict in obj[page_id]["training_data"]:
                         for key in dict:                                
                             x = {}  
-                            x["prompt"] = key + " ->"
+                            check_duplicate = re.match("^<- ", key)
+                            if check_duplicate:
+                                k = k.replace("<- ", "")
+                            else: k = key                
+                            x["prompt"] = k + " ->"
                             x["completion"] = dict[key]
                             if dict[key] != "":
                                 prompts_and_completions.append(x)
@@ -40,6 +44,12 @@ def generate_prompts_file():
     # save data to a json file
     with open("scraped_prompts.json", "w", encoding="utf8") as file:
         json.dump(prompts_and_completions, file, ensure_ascii=False, indent=1)
+
+def check_dict_duplicates(myPrompt, a, duplicates):
+    if myPrompt in a:   
+        duplicates += 1
+        myPrompt = f"{'<- '*duplicates}" + myPrompt
+    return myPrompt, duplicates
 
 # Get text before the first header tag on a page
 def pre_heading_text(soup):
@@ -79,6 +89,7 @@ def prompts_version3(page_title,soup):
     myCompletion = ""
     a = {}
     saved = ""
+    duplicates = 0
     while curr:
         next_header = curr.find_next(re.compile("^h[1-6]"))
         if next_header == None: 
@@ -86,6 +97,7 @@ def prompts_version3(page_title,soup):
             lst = temp.split(" - ")
             myPrompt = lst[0] + " - " + lst[-1]
             if len(lst) > 2: myPrompt = lst[0] + " - " + lst[1] + " - " + lst[-1] 
+            myPrompt, duplicates = check_dict_duplicates(myPrompt,a,duplicates)
             a[myPrompt] = myCompletion
             return a
         else: 
@@ -99,6 +111,7 @@ def prompts_version3(page_title,soup):
             lst = temp.split(" - ")
             myPrompt = lst[0] + " - " + lst[-1]
             if len(lst) > 2: myPrompt = lst[0] + " - " + lst[1] + " - " + lst[-1] 
+            myPrompt, duplicates = check_dict_duplicates(myPrompt,a,duplicates)
             a[myPrompt] = myCompletion
             curr = next_header
 
@@ -107,7 +120,7 @@ def prompts_version3(page_title,soup):
             lst = temp.split(" - ")
             myPrompt = lst[0] + " - " + lst[-1]
             if len(lst) > 2: myPrompt = lst[0] + " - " + lst[1] + " - " + lst[-1] 
-
+            myPrompt, duplicates = check_dict_duplicates(myPrompt,a,duplicates)
             a[myPrompt] = myCompletion
             saved = myPrompt
             myPrompt = page_title
@@ -116,6 +129,7 @@ def prompts_version3(page_title,soup):
 
         elif  previous_header != None and curr_header_size > next_header_size:
             myPrompt, myCompletion = prompt_completion_helper(saved, curr, next_header, previous_header)
+            myPrompt, duplicates = check_dict_duplicates(myPrompt,a,duplicates)
             a[myPrompt] = myCompletion
             myPrompt = page_title
             myCompletion = ""
@@ -133,10 +147,13 @@ def prompts_version2(page_title,soup):
     myCompletion = ""
     a = {}
     saved = ""
+    duplicates = 0
+
     while curr:
         next_header = curr.find_next(re.compile("^h[1-6]"))
         if next_header == None: 
             myPrompt, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header)
+            myPrompt, duplicates = check_dict_duplicates(myPrompt,a,duplicates)
             a[myPrompt] = myCompletion
             return a
         else: 
@@ -147,11 +164,13 @@ def prompts_version2(page_title,soup):
 
         if  previous_header != None and curr_header_size < next_header_size:
             myPrompt, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header)
+            myPrompt, duplicates = check_dict_duplicates(myPrompt,a,duplicates)
             a[myPrompt] = myCompletion
             curr = next_header
 
         elif previous_header != None and curr_header_size == next_header_size:
             myPrompt, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header)
+            myPrompt, duplicates = check_dict_duplicates(myPrompt,a,duplicates)
             a[myPrompt] = myCompletion
             saved = myPrompt
             myPrompt = page_title
@@ -160,6 +179,7 @@ def prompts_version2(page_title,soup):
 
         elif  previous_header != None and curr_header_size > next_header_size:
             myPrompt, myCompletion = prompt_completion_helper(saved, curr, next_header, previous_header)
+            myPrompt, duplicates = check_dict_duplicates(myPrompt,a,duplicates)
             a[myPrompt] = myCompletion
             myPrompt = page_title
             myCompletion = ""
@@ -176,14 +196,17 @@ def prompts_version1(page_title,soup):
     myCompletion = ""
     myCompletionFull = ""
     a = {}
+    duplicates = 0
     while curr:
         next_header = curr.find_next(re.compile("^h[1-6]"))
         temp = myPrompt
         if next_header == None: 
             temp, myCompletion = prompt_completion_helper(temp, curr, next_header, previous_header)
             if myPrompt != page_title:
+                myPrompt, duplicates = check_dict_duplicates(myPrompt,a,duplicates)
                 a[myPrompt] = myCompletionFull + myCompletion
             else:
+                temp, duplicates = check_dict_duplicates(temp,a,duplicates)
                 a[temp] = myCompletionFull + myCompletion
             return a
         else: 
@@ -201,6 +224,7 @@ def prompts_version1(page_title,soup):
             myCompletionFull += myCompletion
             if myPrompt == page_title:
                 myPrompt += " - " + curr.text
+            myPrompt, duplicates = check_dict_duplicates(myPrompt,a,duplicates)
             a[myPrompt] = myCompletionFull
             myPrompt = page_title
             myCompletionFull = ""
@@ -208,6 +232,7 @@ def prompts_version1(page_title,soup):
 
         elif previous_header != None and largest_header_size > next_header_size:
             myPrompt, myCompletion = prompt_completion_helper(myPrompt, curr, next_header, previous_header)
+            myPrompt, duplicates = check_dict_duplicates(myPrompt,a,duplicates)
             a[myPrompt] = myCompletion
             myPrompt = page_title
             myCompletion = ""
@@ -262,7 +287,7 @@ def getTrueSubpages(pid):
                     if top_text != "":
                         dictionary[key]['training_data'] = [{page_title:top_text}]
                     # get headers sections
-                    training_data = prompts_version1(page_title, soup)
+                    training_data = prompts_version3(page_title, soup)
                     dictionary[key]['training_data'].append(training_data)
 
 
@@ -270,17 +295,21 @@ def getTrueSubpages(pid):
     with open("scraped.json", "w", encoding="utf8") as file:
         json.dump(dicts, file, ensure_ascii=False, indent=1)
 
+startTime = time.time()
 getTrueSubpages(1)
+elapsedTime = time.time() - startTime
 generate_prompts_file()
-
+elapsedTime = time.strftime("%H:%M:%S", time.gmtime(elapsedTime))
+print("Elapsed Time: " + str(elapsedTime))
 
 # testing
 tt = '''
+<h2>hi</h2><p>sexy</p>
 
 '''
 
 # soup = BeautifulSoup(tt, "html.parser")
-# training_data = prompts_version1("page_title", soup)
+# training_data = prompts_version2("page_title", soup)
 
 
 # with open("tests.json", "w", encoding="utf8") as file:
