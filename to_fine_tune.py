@@ -4,13 +4,9 @@ def fine_tune_data(json_file):
     prompts_and_completions = []
     for obj in json_file:
         for page_id in obj:
-            # ################################################ #
-            #  {prompt: header tags, completion: text under }  #
-            # ################################################ #
             if len(obj[page_id]["training_data"]) != 0:
-                for i,dict in enumerate(obj[page_id]["training_data"]):
-                    # print(list(dict.keys())[0])
-                    for i,key in enumerate(dict):                    
+                for dict in obj[page_id]["training_data"]:
+                    for key in dict:                    
                         x = {}  
                         x["prompt"] = key + " ->"
                         x["completion"] = dict[key]
